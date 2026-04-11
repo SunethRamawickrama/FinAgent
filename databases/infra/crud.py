@@ -96,3 +96,14 @@ def delete_data_source(db: Session, source_id: str, userId: str):
 
     logger.info(f"Deleted source={source_id} for userId={userId}")
     return True
+
+def get_data_sources_by_user(db: Session, userId: str) -> List[DataRegistry]:
+    sources = (
+        db.query(DataRegistry)
+        .filter(DataRegistry.userId == userId)
+        .order_by(DataRegistry.created_at.desc())
+        .all()
+    )
+
+    logger.info(f"Fetched {len(sources)} data sources for userId={userId}")
+    return sources

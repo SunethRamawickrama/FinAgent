@@ -44,7 +44,7 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/api/add_source")
+@app.post("/api/add_db")
 def add_source(payload: DataSourceCreate, db: Session = Depends(get_db)):
     try:
         new_source = crud.create_data_source(
@@ -76,4 +76,33 @@ def add_source(payload: DataSourceCreate, db: Session = Depends(get_db)):
         return JSONResponse(
             status_code=500,
             content={"message": str(e)}
+        )
+
+@app.get("/api/data-sources")
+def get_user_data_sources(userId: str, db: Session = Depends(get_db)):
+    try:
+        sources = crud.get_data_sources_by_user(db, userId)
+
+        return {
+            "count": len(sources),
+            "data_sources": [
+                {
+                    "id": str(s.id),
+                    "name": s.name,
+                    "source_type": s.source_type,
+                    "host": s.host,
+                    "port": s.port,
+                    "source_name": s.source_name,
+                    "status": s.status,
+                    "metadata": s.metadata_,
+                    "created_at": s.created_at.isoformat() if s.created_at else None
+                }
+                for s in sources
+            ]
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            content={"message": f"Error: {str(e)}"},
+            status_code=500
         )
