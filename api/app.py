@@ -9,7 +9,10 @@ import databases.infra.crud as crud
 
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+from contextlib import asynccontextmanager
 import traceback
+
+from agents.orchestrator.agent_runner import agent_runner
 
 class DataSourceCreate(BaseModel):
     name: str
@@ -20,7 +23,15 @@ class DataSourceCreate(BaseModel):
     source_name: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = {}
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # initialize the orchestrator agent 
+    await agent_runner.initialize()
+    yield
+    # clean up agent conversation
+    await agent_runner.cleanup()
+
+app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://localhost:3000",
@@ -106,3 +117,27 @@ def get_user_data_sources(userId: str, db: Session = Depends(get_db)):
             content={"message": f"Error: {str(e)}"},
             status_code=500
         )
+    
+class QueryRequest(BaseModel):
+    message:      str
+    keep_history: bool = True 
+
+class QueryResponse(BaseModel):
+    response: str
+
+@app.post("/api/query", response_model=QueryResponse)
+async def query(request: QueryRequest):
+    result = await agent_runner.query(
+        task=request.message,
+        keep_history=request.keep_history
+    )
+    return QueryResponse(response=result)
+
+@app.post("/api/reset")
+async def reset():
+    await agent_runner.reset()
+    return {"status": "history cleared"}
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "agent_ready": agent_runner.agent is not None}
