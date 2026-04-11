@@ -1,0 +1,46 @@
+services:
+  # personal finance db
+  personal-finance-db:
+    image: postgres:latest
+    container_name: personal-finance-db
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${DB_PERSONAL_FINANCE_DATA_USER}
+      POSTGRES_PASSWORD: ${DB_PERSONAL_FINANCE_DATA_PASSWORD}
+      POSTGRES_DB: personal_finance_data
+    volumes:
+      - ./databases/data/personal_finance_db/init.sql:/docker-entrypoint-initdb.d/1_init.sql
+      - ./databases/data/personal_finance_db/seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_PERSONAL_FINANCE_DATA_USER} -d personal_finance_data",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Business Finance Database
+  business-finance-db:
+    image: postgres:latest
+    container_name: business-finance-db
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: ${DB_BUSINESS_FINANCE_DATA_USER}
+      POSTGRES_PASSWORD: ${DB_BUSINESS_FINANCE_DATA_PASSWORD}
+      POSTGRES_DB: business_finance_data
+    volumes:
+      - ./databases/data/business_finance_db/init.sql:/docker-entrypoint-initdb.d/1_init.sql
+      - ./databases/data/business_finance_db/seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_BUSINESS_FINANCE_DATA_USER} -d business_finance_data",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
