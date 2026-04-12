@@ -45,3 +45,8 @@ def get_document_by_name(db: Session, doc_name: str) -> Optional[Document]:
     return db.query(Document)\
         .filter(Document.file_name == doc_name)\
         .first()
+
+def get_documents_by_user(db: Session, user_id: str):
+    return db.query(Document).filter(
+        Document.user_id == user_id
+    ).all()
