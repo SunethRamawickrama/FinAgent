@@ -12,3 +12,6 @@ wheels/
 .env.example
 .env.*
 frontend/.env.example
+
+vector_store/
+.vscode
