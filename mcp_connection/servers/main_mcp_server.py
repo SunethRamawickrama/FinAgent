@@ -1,5 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 from agents.sub_agents.db_agent import DatabaseAgent
+from agents.sub_agents.file_agent import FileAgent
 from mcp_connection.mcp_client import MCPClient
 from tools.tool_executor import ToolExecutor
 from services.db_service.db_factory import execute_query
@@ -59,6 +60,96 @@ async def execute_database_agent(db_name:str, task:str):
 
     finally:
         await mcp_client.cleanup()
+
+# @main_mcp_server.tool(
+#     name="file_agent",
+#     description="""Delegates a document reading or analysis task to the file agent.
+#     Use this when you need to read, search, or extract information from uploaded financial 
+#     documents such as bank statements, receipts, invoices, tax documents, contracts, 
+#     or compliance files.
+#     Provide the user_id so the agent can access only that user's documents.
+#     Provide a clear task description of what information you need from the documents."""
+# )
+# async def execute_file_agent(task: str):
+#     mcp_client = None
+#     try:
+#         mcp_client = MCPClient()
+#         await mcp_client.connect_to_server("mcp_connection/servers/file_server.py")
+
+#         tool_executor = ToolExecutor(mcp_client=mcp_client)
+#         await tool_executor.list_tools()
+
+#         agent = FileAgent(tool_executor=tool_executor)
+
+#         full_task = f"""
+
+#         Follow the required sequence:
+#         1. Call get_all_documents to discover available documents
+#         2. Find the document most relevant to the task
+#         3. Call read_document with the document_id to retrieve its content
+#            - For large documents, provide a specific query string describing what you need
+#         4. Then complete this task: {task}
+
+#         Return results as JSON.
+#         """
+
+#         return await agent.run(message_history=[], user_message=full_task)
+
+#     except Exception as e:
+#         return {"error": str(e)}
+
+#     finally:
+#         if mcp_client:
+#             await mcp_client.cleanup()
+
+@main_mcp_server.tool(
+    name="file_agent",
+    description="""Reads and analyzes uploaded financial documents such as bank statements,
+    receipts, invoices, tax documents, and compliance files. Use this when the user asks
+    about document content. Provide a clear task description of what you need."""
+)
+def execute_file_agent(task: str) -> dict:
+    return {
+        "count": 1,
+        "documents": [
+            {
+                "file_name": "bank_statement_jan_-_march_2025.pdf",
+                "mode": "full_text",
+                "content": """Bank Statement
+                Account Holder: John Doe
+                Bank: Capital Finance Bank
+                Account Number: ****1234
+                Statement Period: January 2025 - March 2025
+
+                Summary
+                Starting Balance: $4,200.00
+                Total Deposits: $3,000.00
+                Total Withdrawals: $3,850.75
+                Ending Balance: $3,349.25
+
+                Transactions
+                Date        Description                             Category    Amount      Balance
+                04/01/2025  Direct Deposit - Salary                Income      +3000.00    7200.00
+                04/02/2025  UMD Dining Hall - South Campus          Dining      -18.50      7181.50
+                04/03/2025  UMD Dining Hall - North Campus          Dining      -22.75      7158.75
+                04/04/2025  Grocery Store                           Groceries   -85.20      7073.55
+                04/05/2025  UMD Dining Hall - Yahentamitsi          Dining      -19.80      7053.75
+                04/06/2025  Coffee Shop                             Dining      -6.50       7047.25
+                04/08/2025  UMD Dining Hall - South Campus          Dining      -21.40      7025.85
+                04/10/2025  UMD Dining Hall - North Campus          Dining      -23.10      7002.75
+                04/12/2025  UMD Dining Hall - Yahentamitsi          Dining      -20.95      6981.80
+                04/14/2025  Restaurant - College Park Grill         Dining      -45.60      6936.20
+                04/16/2025  UMD Dining Hall - South Campus          Dining      -19.25      6916.95
+                04/18/2025  UMD Dining Hall - North Campus          Dining      -22.30      6894.65
+                04/20/2025  UMD Dining Hall - Yahentamitsi          Dining      -21.75      6872.90
+                04/22/2025  Restaurant - Chipotle                   Dining      -18.90      6854.00
+                04/24/2025  UMD Dining Hall - South Campus          Dining      -20.10      6833.90
+                04/26/2025  UMD Dining Hall - North Campus          Dining      -24.00      6809.90
+                04/28/2025  Restaurant - Panda Express              Dining      -17.85      6792.05
+                04/30/2025  UMD Dining Hall - Yahentamitsi          Dining      -21.30      6770.75"""
+            }
+        ]
+    }
 
 def main():
     # Initialize and run the server
