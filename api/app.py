@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Depends, Header, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, Header, HTTPException, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 import traceback
 
 from agents.orchestrator.agent_runner import agent_runner
+from services.rag_service.chunker import Chunker
 
 class DataSourceCreate(BaseModel):
     name: str
@@ -141,3 +142,19 @@ async def reset():
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "agent_ready": agent_runner.agent is not None}
+
+chunker = Chunker()
+
+@app.post("/api/upload")
+def upload(userId: str=Form(...), file: UploadFile = File(...), db: Session = Depends(get_db),):
+    global chunker
+    result = chunker.upload(source_file=file, db=db, user_id=userId)
+
+    return JSONResponse(
+        content={
+            "message": "File uploaded and stored successfully!",
+            "data": result
+        },
+        status_code=200
+    )
+    
